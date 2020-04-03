@@ -1,0 +1,24 @@
+[submodule "snmalloc"]
+	path = snmalloc
+	url = git@github.com:microsoft/snmalloc
+[submodule "mimalloc"]
+	path = mimalloc
+	url = git@github.com:microsoft/mimalloc
+[submodule "gperftools"]
+	path = gperftools
+	url = git@github.com:gperftools/gperftools
+[submodule "tbb"]
+	path = tbb
+	url = git@github.com:intel/tbb
+[submodule "Hoard"]
+	path = Hoard
+	url = git@github.com:emeryberger/Hoard
+[submodule "rpmalloc"]
+	path = rpmalloc
+	url = git@github.com:mjansson/rpmalloc
+[submodule "scalloc"]
+	path = scalloc
+	url = git@github.com:cksystemsgroup/scalloc
+[submodule "mesh"]
+	path = mesh
+	url = git@github.com:plasma-umass/mesh
