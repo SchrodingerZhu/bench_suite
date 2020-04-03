@@ -22,3 +22,6 @@
 [submodule "mesh"]
 	path = mesh
 	url = git@github.com:plasma-umass/mesh
+[submodule "jemallocator"]
+	path = jemalloc
+	url = git@github.com:jemalloc/jemalloc.git
