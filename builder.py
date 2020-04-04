@@ -40,6 +40,9 @@ class CMAKEBuilder:
             self.clean()
         return os.path.abspath(path + "/" + self.lib)
 
+    def version(self):
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[0]
+
 
 class MAKEBuilder:
     def __init__(self, name: str, workdir: str, lib: str, target: Optional[str]=None, options: Iterable = (), parallel: Optional[int] = None, prepare=None):
@@ -63,6 +66,9 @@ class MAKEBuilder:
     def clean(self):
         subprocess.run(["git", "clean", "-fdx"], cwd=self.workdir)
 
+    def version(self):
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[0]
+
     def build(self) -> str:
         if self.prepare:
             self.prepare()
@@ -82,5 +88,7 @@ builder_list = {
     "mimalloc-secure": CMAKEBuilder("mimalloc-secure", "mimalloc", "mimalloc", "libmimalloc-secure.so",
                                     options=("-DCMAKE_BUILD_TYPE=Release", "-DMI_SECURE=4")),
     "tcmalloc": MAKEBuilder("tcmalloc", "gperftools", ".libs/libtcmalloc_minimal.so", prepare=__tcmalloc_prepare),
-    "tbb": MAKEBuilder("intel-tbb", "tbb", )
+    "tbb": MAKEBuilder("intel-tbb", "tbb", "build/bench_release/libtbbmalloc.so.2", "tbbmalloc", options=["-e", "tbb_build_prefix=bench"]),
+    "hoard": MAKEBuilder("hoard", "Hoard/src", "libhoard.so"),
+
 }
