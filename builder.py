@@ -3,6 +3,7 @@ import subprocess
 import shutil
 import os
 import types
+import platform
 from typing import *
 
 
@@ -40,12 +41,16 @@ class CMAKEBuilder:
             self.clean()
         return os.path.abspath(path + "/" + self.lib)
 
+    def library(self):
+        path = self.workdir + "/bench_build_" + self.name
+        return os.path.abspath(path + "/" + self.lib)
+
     def version(self):
         return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[0]
 
 
-class MAKEBuilder:
-    def __init__(self, name: str, workdir: str, lib: str, target: Optional[str]=None, options: Iterable = (), parallel: Optional[int] = None, prepare=None):
+class GeneralBuilder:
+    def __init__(self, name: str, workdir: str, lib: str, target: Optional[Union[str, List[str]]]=None, options: Iterable = (), parallel: Optional[int] = None, prepare=None, generator="make"):
         if not parallel:
             self.parallel = multiprocessing.cpu_count()
         else:
@@ -57,13 +62,16 @@ class MAKEBuilder:
         self.workdir = os.path.abspath(workdir)
         self.name = name
         self.lib = lib
-        if target:
-            self.build_cmd = ["make", target]
+        if isinstance(target, list):
+            self.build_cmd = [generator, *target]
+        elif target:
+            self.build_cmd = [generator, target]
         else:
-            self.build_cmd = ["make"]
+            self.build_cmd = [generator]
         self.options = list(options)
 
     def clean(self):
+        subprocess.run(["git", "reset", "--hard"], cwd=self.workdir)
         subprocess.run(["git", "clean", "-fdx"], cwd=self.workdir)
 
     def version(self):
@@ -75,11 +83,24 @@ class MAKEBuilder:
         subprocess.run([*self.build_cmd, "-j", str(self.parallel), *self.options], cwd=self.workdir)
         return os.path.abspath(self.workdir + "/" + self.lib)
 
+    def library(self) -> str:
+        return os.path.abspath(self.workdir + "/" + self.lib)
+
 def __tcmalloc_prepare(self):
     subprocess.run(["sh", "autogen.sh"], cwd=self.workdir)
     subprocess.run(["sh", "configure", "--enable-minimal"], cwd=self.workdir)
 
+def __jemalloc_prepare(self):
+    subprocess.run(["sh", "autogen.sh"], cwd=self.workdir)
 
+def __rpmalloc_prepare(self):
+    subprocess.run(["python", "configure.py"], cwd=self.workdir)
+
+def __scalloc_prepare(self):
+    subprocess.run(["gyp", "--depth=.", "scalloc.gyp"], cwd=self.workdir)
+
+def __super_prepare(self):
+    subprocess.run(["sed", "-i", "s/-Werror//", "Makefile.include"], cwd=self.workdir + "/..")
 
 builder_list = {
     "snmalloc": CMAKEBuilder("snmalloc", "snmalloc", "snmallocshim", "libsnmallocshim.so"),
@@ -87,8 +108,12 @@ builder_list = {
     "mimalloc": CMAKEBuilder("mimalloc", "mimalloc", "mimalloc", "libmimalloc.so"),
     "mimalloc-secure": CMAKEBuilder("mimalloc-secure", "mimalloc", "mimalloc", "libmimalloc-secure.so",
                                     options=("-DCMAKE_BUILD_TYPE=Release", "-DMI_SECURE=4")),
-    "tcmalloc": MAKEBuilder("tcmalloc", "gperftools", ".libs/libtcmalloc_minimal.so", prepare=__tcmalloc_prepare),
-    "tbb": MAKEBuilder("intel-tbb", "tbb", "build/bench_release/libtbbmalloc.so.2", "tbbmalloc", options=["-e", "tbb_build_prefix=bench"]),
-    "hoard": MAKEBuilder("hoard", "Hoard/src", "libhoard.so"),
-
+    "tcmalloc": GeneralBuilder("tcmalloc", "gperftools", ".libs/libtcmalloc_minimal.so", prepare=__tcmalloc_prepare),
+    "tbb": GeneralBuilder("intel-tbb", "tbb", "build/bench_release/libtbbmalloc.so.2", "tbbmalloc", options=["-e", "tbb_build_prefix=bench"]),
+    "hoard": GeneralBuilder("hoard", "Hoard/src", "libhoard.so"),
+    "jemalloc": GeneralBuilder("jemalloc", "jemalloc", "lib/libjemalloc.so", prepare=__jemalloc_prepare),
+    "rpmalloc": GeneralBuilder("rpmalloc", "rpmalloc", "bin/" + platform.system().lower() + '/release/' + platform.machine().replace('_', '-') + '/librpmallocwrap.so', generator='ninja', prepare=__rpmalloc_prepare),
+    "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare, options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
+    "mesh": GeneralBuilder("mesh", "mesh", "bazel-bin/src/libmesh.so", target=["build", "lib"]),
+    "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare)
 }

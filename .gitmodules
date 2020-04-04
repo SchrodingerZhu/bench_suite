@@ -27,3 +27,6 @@
 	path = jemalloc
 	url = git@github.com:jemalloc/jemalloc.git
 
+[submodule "SuperMalloc"]
+	path = SuperMalloc
+	url = https://github.com/kuszmaul/SuperMalloc.git
