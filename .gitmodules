@@ -30,3 +30,6 @@
 [submodule "SuperMalloc"]
 	path = SuperMalloc
 	url = https://github.com/kuszmaul/SuperMalloc.git
+[submodule "mimalloc-bench"]
+	path = mimalloc-bench
+	url = https://github.com/daanx/mimalloc-bench

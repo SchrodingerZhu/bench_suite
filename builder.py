@@ -135,3 +135,4 @@ builder_list = {
 
 def build_all() -> List[Tuple[str, str, str]]:
     return [(i.name, str(i.version()), i.build()) for i in builder_list.values()]
+
