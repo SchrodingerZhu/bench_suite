@@ -10,6 +10,7 @@
 [submodule "tbb"]
 	path = tbb
 	url = git@github.com:intel/tbb
+	branch = tbb_2020
 [submodule "Hoard"]
 	path = Hoard
 	url = git@github.com:emeryberger/Hoard
@@ -25,3 +26,4 @@
 [submodule "jemallocator"]
 	path = jemalloc
 	url = git@github.com:jemalloc/jemalloc.git
+
