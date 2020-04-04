@@ -46,11 +46,13 @@ class CMAKEBuilder:
         return os.path.abspath(path + "/" + self.lib)
 
     def version(self):
-        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[0]
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[
+            0]
 
 
 class GeneralBuilder:
-    def __init__(self, name: str, workdir: str, lib: str, target: Optional[Union[str, List[str]]]=None, options: Iterable = (), parallel: Optional[int] = None, prepare=None, generator="make"):
+    def __init__(self, name: str, workdir: str, lib: str, target: Optional[Union[str, List[str]]] = None,
+                 options: Iterable = (), parallel: Optional[int] = None, prepare=None, generator="make"):
         if not parallel:
             self.parallel = multiprocessing.cpu_count()
         else:
@@ -75,7 +77,8 @@ class GeneralBuilder:
         subprocess.run(["git", "clean", "-fdx"], cwd=self.workdir)
 
     def version(self):
-        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[0]
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[
+            0]
 
     def build(self) -> str:
         if self.prepare:
@@ -86,21 +89,27 @@ class GeneralBuilder:
     def library(self) -> str:
         return os.path.abspath(self.workdir + "/" + self.lib)
 
+
 def __tcmalloc_prepare(self):
     subprocess.run(["sh", "autogen.sh"], cwd=self.workdir)
     subprocess.run(["sh", "configure", "--enable-minimal"], cwd=self.workdir)
 
+
 def __jemalloc_prepare(self):
     subprocess.run(["sh", "autogen.sh"], cwd=self.workdir)
+
 
 def __rpmalloc_prepare(self):
     subprocess.run(["python", "configure.py"], cwd=self.workdir)
 
+
 def __scalloc_prepare(self):
     subprocess.run(["gyp", "--depth=.", "scalloc.gyp"], cwd=self.workdir)
 
+
 def __super_prepare(self):
     subprocess.run(["sed", "-i", "s/-Werror//", "Makefile.include"], cwd=self.workdir + "/..")
+
 
 builder_list = {
     "snmalloc": CMAKEBuilder("snmalloc", "snmalloc", "snmallocshim", "libsnmallocshim.so"),
@@ -109,11 +118,20 @@ builder_list = {
     "mimalloc-secure": CMAKEBuilder("mimalloc-secure", "mimalloc", "mimalloc", "libmimalloc-secure.so",
                                     options=("-DCMAKE_BUILD_TYPE=Release", "-DMI_SECURE=4")),
     "tcmalloc": GeneralBuilder("tcmalloc", "gperftools", ".libs/libtcmalloc_minimal.so", prepare=__tcmalloc_prepare),
-    "tbb": GeneralBuilder("intel-tbb", "tbb", "build/bench_release/libtbbmalloc.so.2", "tbbmalloc", options=["-e", "tbb_build_prefix=bench"]),
+    "tbb": GeneralBuilder("intel-tbb", "tbb", "build/bench_release/libtbbmalloc.so.2", "tbbmalloc",
+                          options=["-e", "tbb_build_prefix=bench"]),
     "hoard": GeneralBuilder("hoard", "Hoard/src", "libhoard.so"),
     "jemalloc": GeneralBuilder("jemalloc", "jemalloc", "lib/libjemalloc.so", prepare=__jemalloc_prepare),
-    "rpmalloc": GeneralBuilder("rpmalloc", "rpmalloc", "bin/" + platform.system().lower() + '/release/' + platform.machine().replace('_', '-') + '/librpmallocwrap.so', generator='ninja', prepare=__rpmalloc_prepare),
-    "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare, options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
+    "rpmalloc": GeneralBuilder("rpmalloc", "rpmalloc",
+                               "bin/" + platform.system().lower() + '/release/'
+                               + platform.machine().replace('_', '-') + '/librpmallocwrap.so',
+                               generator='ninja', prepare=__rpmalloc_prepare),
+    "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
+                              options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
     "mesh": GeneralBuilder("mesh", "mesh", "bazel-bin/src/libmesh.so", target=["build", "lib"]),
     "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare)
 }
+
+
+def build_all() -> List[Tuple[str, str, str]]:
+    return [(i.name, str(i.version()), i.build()) for i in builder_list.values()]
