@@ -1,3 +1,2 @@
 matplotlib>=3.2.1
-persistent>=4.6.4
-ZODB>=5
+fire>=0.3.0

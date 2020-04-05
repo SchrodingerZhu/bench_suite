@@ -1,6 +1,7 @@
 import tempfile
 import subprocess
 import multiprocessing
+import time
 from typing import *
 
 BARNES_TEMPLATE = """
@@ -19,6 +20,8 @@ BARNES_TEMPLATE = """
 
 
 class PreloadBencher:
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault")
+
     def __init__(self, exec, args=(), extra_env: Mapping[str, str] = None, stdin=None, lib_path=None,
                  cwd=None):
         self.exec = exec
@@ -38,6 +41,9 @@ class PreloadBencher:
         self.cwd = cwd
         if self.lib_path:
             self.env["LD_PRELOAD"] = self.lib_path
+
+    def __getitem__(self, item):
+        return self.__dict__[item]
 
     def run(self):
         with tempfile.NamedTemporaryFile() as time_record:
@@ -75,6 +81,8 @@ class Agda(PreloadBencher):
 
 
 class RpTest(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd", "op_per_sec")
+
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -91,6 +99,8 @@ class RpTest(PreloadBencher):
 
 
 class MStress(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -102,6 +112,8 @@ class MStress(PreloadBencher):
 
 
 class RbStress(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -117,6 +129,8 @@ class RbStress(PreloadBencher):
 
 
 class AllocTest(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+
     def __init__(self, lib_path=None, thd=None):
         if thd:
             self.thd = thd
@@ -130,6 +144,8 @@ class AllocTest(PreloadBencher):
 
 
 class Larson(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd", "op_per_sec")
+
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -145,8 +161,10 @@ class Larson(PreloadBencher):
 
 
 class XmallocTest(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd", "op_per_sec", "rtime")
+
     def __init__(self, lib_path=None, thd=None):
-        self.mfree_per_sec = None
+        self.op_per_sec = None
         self.rtime = None
         if thd:
             self.thd = thd
@@ -159,7 +177,7 @@ class XmallocTest(PreloadBencher):
         super().run()
         output = self.stdout.split()
         self.rtime = float(output[1].strip(','))
-        self.mfree_per_sec = float(output[-2])
+        self.op_per_sec = float(output[-2])
 
 
 class Barnes(PreloadBencher):
@@ -172,24 +190,34 @@ class Barnes(PreloadBencher):
 
 
 class Redis(PreloadBencher):
+    attribute_list = ("mem_peak", "page_fault", "op_per_sec")
+
     def __init__(self, lib_path=None):
-        self.req_per_sec = None
+        self.op_per_sec = None
         super().__init__("redis-benchmark",
-                         args=["-r", "1000000", "-n", "1000000", "-P", "8", "-q", "lpush", "a", "1", "2", "3", "4", "5",
-                               "6", "7", "8", "9", "10", "lrange", "a", "1", "10"], lib_path=lib_path)
+                         args=["-r", "1000000", "-n", "1000000", "-P", "8", "-q", "lpush", "a", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "lrange", "a", "1", "10"], lib_path=lib_path)
 
     def run(self):
         with tempfile.NamedTemporaryFile() as time_record:
             with subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server"],
-                                  env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
-                super().run()
-                subprocess.run(["redis-cli", "shutdown"])
-                with open(time_record.name) as file:
-                    res = file.readline().split()
-                    self.page_fault = int(res[0])
-                    self.time_elapsed = float(res[1])
-                    self.mem_peak = int(res[2])
-                    self.req_per_sec = float(self.stdout.split()[-4])
+                                  env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as server:
+                try:
+                    super().run()
+                    subprocess.run(["redis-cli", "shutdown"])
+                    time.sleep(1)
+                    with open(time_record.name) as file:
+                        res = file.readline().split()
+                        self.page_fault = int(res[0])
+                        self.time_elapsed = float(res[1])
+                        self.mem_peak = int(res[2])
+                        self.op_per_sec = float(self.stdout.split()[-4])
+                except Exception as e:
+                    server.kill()
+                    print(server.stdout.read().decode())
+                    print(server.stderr.read().decode())
+                    time.sleep(1)
+                    raise e
+
 
 
 class Espresso(PreloadBencher):
@@ -199,6 +227,8 @@ class Espresso(PreloadBencher):
 
 
 class Sh6Bench(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+
     def __init__(self, lib_path=None, thd=None):
         if thd:
             self.thd = thd
@@ -208,6 +238,8 @@ class Sh6Bench(PreloadBencher):
 
 
 class Sh8Bench(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+
     def __init__(self, lib_path=None, thd=None):
         if thd:
             self.thd = thd
@@ -217,6 +249,8 @@ class Sh8Bench(PreloadBencher):
 
 
 class CacheThrash(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+
     def __init__(self, lib_path=None, thd=None):
         if thd:
             self.thd = thd
@@ -227,6 +261,8 @@ class CacheThrash(PreloadBencher):
 
 
 class CacheScratch(PreloadBencher):
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+
     def __init__(self, lib_path=None, thd=None):
         if thd:
             self.thd = thd
@@ -237,16 +273,40 @@ class CacheScratch(PreloadBencher):
 
 
 class Ebizzy(PreloadBencher):
+    attribute_list = ("mem_peak", "page_fault", "thd", "op_per_sec")
+
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
             self.thd = thd
         else:
             self.thd = multiprocessing.cpu_count()
-        super().__init__("ltp/utils/benchmark/ebizzy-0.3/ebizzy", args=["-t", str(self.thd), "-M", "-S", "5", "-s", "128"],
+        super().__init__("ltp/utils/benchmark/ebizzy-0.3/ebizzy",
+                         args=["-t", str(self.thd), "-M", "-S", "5", "-s", "128"],
                          lib_path=lib_path)
 
     def run(self):
         super().run()
         output = self.stdout.split()
         self.op_per_sec = int(output[0])
+
+
+bencher_list = {
+    "c_frac": CFrac,
+    "malloc_large": MallocLarge,
+    "z3": Z3,
+    "agda": RpTest,
+    "mstress": MStress,
+    "rbstress": RbStress,
+    "alloc_test": AllocTest,
+    "alloc_larson": Larson,
+    "xmalloc_test": XmallocTest,
+    "barnes": Barnes,
+    "redis": Redis,
+    "espresso": Espresso,
+    "sh6bench": Sh6Bench,
+    "sh8bench": Sh8Bench,
+    "cache_scratch": CacheScratch,
+    "cache_trash": CacheThrash,
+    "ebizzy": Ebizzy
+}

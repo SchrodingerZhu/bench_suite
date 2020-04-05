@@ -33,17 +33,23 @@ class CMAKEBuilder:
 
     def build(self) -> str:
         path = self.workdir + "/bench_build_" + self.name
-        os.mkdir(path)
-        if subprocess.run(["cmake", "..", *self.options], cwd=path).returncode != 0:
-            self.clean()
-        if subprocess.run(["cmake", "--build", ".", "--target", self.target, "--parallel", str(self.parallel)],
-                          cwd=path).returncode != 0:
-            self.clean()
+        try:
+            os.mkdir(path)
+            if subprocess.run(["cmake", "..", *self.options], cwd=path).returncode != 0:
+                self.clean()
+            if subprocess.run(["cmake", "--build", ".", "--target", self.target, "--parallel", str(self.parallel)],
+                              cwd=path).returncode != 0:
+                self.clean()
+        except FileExistsError:
+            print("build existed for", self.name)
         return os.path.abspath(path + "/" + self.lib)
 
     def library(self):
         path = self.workdir + "/bench_build_" + self.name
         return os.path.abspath(path + "/" + self.lib)
+
+    def size(self):
+        return os.path.getsize(self.library())
 
     def version(self):
         return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[
@@ -128,12 +134,13 @@ builder_list = {
                                generator='ninja', prepare=__rpmalloc_prepare),
     "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
                               options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
+    # emmm, this will make some test run into segment fault
     "mesh": GeneralBuilder("mesh", "mesh", "bazel-bin/src/libmesh.so", target=["build", "lib"]),
     "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare),
-    "hardened": GeneralBuilder("hardened_malloc", "hardened_malloc", "libhardened_malloc.so", target="libhardened_malloc.so")
+    "hardened": GeneralBuilder("hardened_malloc", "hardened_malloc", "libhardened_malloc.so",
+                               target="libhardened_malloc.so")
 }
 
 
 def build_all() -> List[Tuple[str, str, str]]:
-    return [(i.name, str(i.version()), i.build()) for i in builder_list.values()]
-
+    return [(i.name, i.version().decode(), i.build()) for i in builder_list.values()]
