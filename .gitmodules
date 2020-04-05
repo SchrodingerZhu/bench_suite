@@ -39,3 +39,6 @@
 [submodule "hardened_malloc"]
 	path = hardened_malloc
 	url = git@github.com:GrapheneOS/hardened_malloc.git
+[submodule "ltp"]
+	path = ltp
+	url = https://github.com/linux-test-project/ltp

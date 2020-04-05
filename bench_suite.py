@@ -31,5 +31,9 @@ def compile():
         print("use existing benchmark dir")
     # run once before really start
     subprocess.run(["agda", "./IO.agda"], cwd="agda-stdlib/src")
+    ebizzy = "ltp/utils/benchmark/ebizzy-0.3"
+    os.chmod(ebizzy + "/configure", 0o777)
+    subprocess.run(["sh", "./configure"], cwd=ebizzy)
+    subprocess.run(["make"], cwd=ebizzy)
 
 

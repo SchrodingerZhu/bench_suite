@@ -46,8 +46,8 @@ class PreloadBencher:
                                    stdout=subprocess.PIPE)
             with open(time_record.name) as file:
                 res = file.readline().split()
-                self.stdout = str(child.stdout)
-                self.stderr = str(child.stderr)
+                self.stdout = child.stdout.decode()
+                self.stderr = child.stderr.decode()
                 self.returncode = child.returncode
                 self.page_fault = int(res[0])
                 self.time_elapsed = float(res[1])
@@ -113,7 +113,7 @@ class RbStress(PreloadBencher):
 
     def run(self):
         super().run()
-        self.time_elapsed = float(self.stdout.split()[-1].strip("\\n'"))
+        self.time_elapsed = float(self.stdout.split()[-1].strip())
 
 
 class AllocTest(PreloadBencher):
@@ -200,7 +200,6 @@ class Espresso(PreloadBencher):
 
 class Sh6Bench(PreloadBencher):
     def __init__(self, lib_path=None, thd=None):
-        self.op_per_sec = None
         if thd:
             self.thd = thd
         else:
@@ -210,7 +209,6 @@ class Sh6Bench(PreloadBencher):
 
 class Sh8Bench(PreloadBencher):
     def __init__(self, lib_path=None, thd=None):
-        self.op_per_sec = None
         if thd:
             self.thd = thd
         else:
@@ -220,7 +218,6 @@ class Sh8Bench(PreloadBencher):
 
 class CacheThrash(PreloadBencher):
     def __init__(self, lib_path=None, thd=None):
-        self.op_per_sec = None
         if thd:
             self.thd = thd
         else:
@@ -231,10 +228,25 @@ class CacheThrash(PreloadBencher):
 
 class CacheScratch(PreloadBencher):
     def __init__(self, lib_path=None, thd=None):
-        self.op_per_sec = None
         if thd:
             self.thd = thd
         else:
             self.thd = multiprocessing.cpu_count()
         super().__init__("benchmark/cache-scratch", args=[str(self.thd), '5000', '1', '2000000', str(self.thd)],
                          lib_path=lib_path)
+
+
+class Ebizzy(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("ltp/utils/benchmark/ebizzy-0.3/ebizzy", args=["-t", str(self.thd), "-M", "-S", "5", "-s", "128"],
+                         lib_path=lib_path)
+
+    def run(self):
+        super().run()
+        output = self.stdout.split()
+        self.op_per_sec = int(output[0])
