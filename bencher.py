@@ -81,13 +81,13 @@ class Redis(PreloadBencher):
 
     def run(self):
         with tempfile.NamedTemporaryFile() as time_record:
-            subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server"],
-                                      env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            super().run()
-            subprocess.run(["redis-cli", "shutdown"])
-            with open(time_record.name) as file:
-                res = file.readline().split()
-                self.page_fault = int(res[0])
-                self.time_escape = float(res[1])
-                self.mem_peak = int(res[2])
-                self.req_per_sec = float(self.stdout.split()[-4])
+            with subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server"],
+                                      env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
+                super().run()
+                subprocess.run(["redis-cli", "shutdown"])
+                with open(time_record.name) as file:
+                    res = file.readline().split()
+                    self.page_fault = int(res[0])
+                    self.time_escape = float(res[1])
+                    self.mem_peak = int(res[2])
+                    self.req_per_sec = float(self.stdout.split()[-4])

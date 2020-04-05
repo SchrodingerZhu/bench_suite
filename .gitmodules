@@ -36,3 +36,6 @@
 [submodule "agda-stdlib"]
 	path = agda-stdlib
 	url = https://github.com/agda/agda-stdlib
+[submodule "hardened_malloc"]
+	path = hardened_malloc
+	url = git@github.com:GrapheneOS/hardened_malloc.git

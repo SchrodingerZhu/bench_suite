@@ -129,7 +129,8 @@ builder_list = {
     "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
                               options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
     "mesh": GeneralBuilder("mesh", "mesh", "bazel-bin/src/libmesh.so", target=["build", "lib"]),
-    "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare)
+    "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare),
+    "hardened": GeneralBuilder("hardened_malloc", "hardened_malloc", "libhardened_malloc.so", target="libhardened_malloc.so")
 }
 
 
