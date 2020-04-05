@@ -59,14 +59,30 @@ class Agda(PreloadBencher):
     def __init__(self, lib_path=None):
         super().__init__("agda", args=["./IO.agda"], lib_path=lib_path, cwd="agda-stdlib/src")
 
+
+class RpTest(PreloadBencher):
+    def __init__(self, lib_path=None):
+        self.op_per_sec = None
+        super().__init__("benchmark/rptest", args=["12", "0", "2", "2", "500", "1000", "200", "8", "64000"],
+                         lib_path=lib_path)
+
+    def run(self):
+        super().run()
+        res = str(self.stdout.split()[-13])
+        self.op_per_sec = int(res.strip('.'))
+
+
 class Redis(PreloadBencher):
     def __init__(self, lib_path=None):
         self.req_per_sec = None
-        super().__init__("redis-benchmark", args=["-r", "1000000", "-n", "1000000", "-P", "8", "-q", "lpush", "a", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "lrange", "a", "1", "10"],lib_path=lib_path)
+        super().__init__("redis-benchmark",
+                         args=["-r", "1000000", "-n", "1000000", "-P", "8", "-q", "lpush", "a", "1", "2", "3", "4", "5",
+                               "6", "7", "8", "9", "10", "lrange", "a", "1", "10"], lib_path=lib_path)
 
     def run(self):
         with tempfile.NamedTemporaryFile() as time_record:
-            server = subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server"], env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server"],
+                                      env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             super().run()
             subprocess.run(["redis-cli", "shutdown"])
             with open(time_record.name) as file:
@@ -74,5 +90,4 @@ class Redis(PreloadBencher):
                 self.page_fault = int(res[0])
                 self.time_escape = float(res[1])
                 self.mem_peak = int(res[2])
-                self.req_per_sec=float(self.stdout.split()[-4])
-
+                self.req_per_sec = float(self.stdout.split()[-4])

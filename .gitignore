@@ -4,3 +4,4 @@ __pycache__
 .idea
 benchmark
 dump.rdb
+benchmark-random*
