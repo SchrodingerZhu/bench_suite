@@ -1,10 +1,25 @@
 import tempfile
 import subprocess
+import multiprocessing
 from typing import *
+
+BARNES_TEMPLATE = """
+327680
+123
+
+0.025
+0.05
+1.0
+2.0
+5.0
+0.075
+0.25
+1
+"""
 
 
 class PreloadBencher:
-    def __init__(self, exec, args=(), extra_env: Mapping[str, str] = None, stdin: Optional[bytes] = None, lib_path=None,
+    def __init__(self, exec, args=(), extra_env: Mapping[str, str] = None, stdin=None, lib_path=None,
                  cwd=None):
         self.exec = exec
         self.args = args
@@ -18,7 +33,7 @@ class PreloadBencher:
         self.stdout = None
         self.returncode = None
         self.page_fault = None
-        self.time_escape = None
+        self.time_elapsed = None
         self.mem_peak = None
         self.cwd = cwd
         if self.lib_path:
@@ -35,7 +50,7 @@ class PreloadBencher:
                 self.stderr = str(child.stderr)
                 self.returncode = child.returncode
                 self.page_fault = int(res[0])
-                self.time_escape = float(res[1])
+                self.time_elapsed = float(res[1])
                 self.mem_peak = int(res[2])
 
 
@@ -44,10 +59,9 @@ class CFrac(PreloadBencher):
         super().__init__("benchmark/cfrac", args=["17545186520507317056371138836327483792789528"], lib_path=lib_path)
 
 
-class AllocTest(PreloadBencher):
-    def __init__(self, lib_path=None, size=16):
-        self.size = size
-        super().__init__("benchmark/alloc-test", args=[str(size)], lib_path=lib_path)
+class MallocLarge(PreloadBencher):
+    def __init__(self, lib_path=None):
+        super().__init__("benchmark/malloc-large", lib_path=lib_path)
 
 
 class Z3(PreloadBencher):
@@ -61,15 +75,100 @@ class Agda(PreloadBencher):
 
 
 class RpTest(PreloadBencher):
-    def __init__(self, lib_path=None):
+    def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
-        super().__init__("benchmark/rptest", args=["12", "0", "2", "2", "500", "1000", "200", "8", "64000"],
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/rptest", args=[str(self.thd), "0", "2", "2", "500", "1000", "200", "8", "64000"],
                          lib_path=lib_path)
 
     def run(self):
         super().run()
         res = str(self.stdout.split()[-13])
         self.op_per_sec = int(res.strip('.'))
+
+
+class MStress(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/mstress", args=[str(self.thd), "100", "10"],
+                         lib_path=lib_path)
+
+
+class RbStress(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("ruby", args=["mimalloc-bench/bench/rbstress/stress_mem.rb", str(self.thd)],
+                         lib_path=lib_path)
+
+    def run(self):
+        super().run()
+        self.time_elapsed = float(self.stdout.split()[-1].strip("\\n'"))
+
+
+class AllocTest(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/alloc-test", args=[str(self.thd)], lib_path=lib_path)
+
+    def run(self):
+        super().run()
+        self.time_elapsed = float(self.stdout.split()[-7].strip()) / 1000.0
+
+
+class Larson(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/larson", args=['2.5', '8', '256', '1000', '200', '42', str(self.thd)],
+                         lib_path=lib_path)
+
+    def run(self):
+        super().run()
+        self.op_per_sec = int(self.stdout.split()[2])
+
+
+class XmallocTest(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.mfree_per_sec = None
+        self.rtime = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/xmalloc-test", args=["-w", str(self.thd), "-s", "-1", "-t", "20"],
+                         lib_path=lib_path)
+
+    def run(self):
+        super().run()
+        output = self.stdout.split()
+        self.rtime = float(output[1].strip(','))
+        self.mfree_per_sec = float(output[-2])
+
+
+class Barnes(PreloadBencher):
+    def __init__(self, lib_path=None):
+        self.__temp = None
+        self.__temp = tempfile.NamedTemporaryFile()
+        with open(self.__temp.name, "w") as file:
+            file.write(BARNES_TEMPLATE)
+        super().__init__("benchmark/barnes", stdin=open(self.__temp.name), lib_path=lib_path)
 
 
 class Redis(PreloadBencher):
@@ -82,12 +181,60 @@ class Redis(PreloadBencher):
     def run(self):
         with tempfile.NamedTemporaryFile() as time_record:
             with subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server"],
-                                      env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
+                                  env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
                 super().run()
                 subprocess.run(["redis-cli", "shutdown"])
                 with open(time_record.name) as file:
                     res = file.readline().split()
                     self.page_fault = int(res[0])
-                    self.time_escape = float(res[1])
+                    self.time_elapsed = float(res[1])
                     self.mem_peak = int(res[2])
                     self.req_per_sec = float(self.stdout.split()[-4])
+
+
+class Espresso(PreloadBencher):
+    def __init__(self, lib_path=None):
+        super().__init__("benchmark/espresso", args=["mimalloc-bench/bench/espresso/largest.espresso"],
+                         lib_path=lib_path)
+
+
+class Sh6Bench(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/sh6bench", args=[str(self.thd)], lib_path=lib_path)
+
+
+class Sh8Bench(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/sh8bench", args=[str(self.thd)], lib_path=lib_path)
+
+
+class CacheThrash(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/cache-thrash", args=[str(self.thd), '5000', '1', '2000000', str(self.thd)],
+                         lib_path=lib_path)
+
+
+class CacheScratch(PreloadBencher):
+    def __init__(self, lib_path=None, thd=None):
+        self.op_per_sec = None
+        if thd:
+            self.thd = thd
+        else:
+            self.thd = multiprocessing.cpu_count()
+        super().__init__("benchmark/cache-scratch", args=[str(self.thd), '5000', '1', '2000000', str(self.thd)],
+                         lib_path=lib_path)
