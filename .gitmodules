@@ -33,3 +33,6 @@
 [submodule "mimalloc-bench"]
 	path = mimalloc-bench
 	url = https://github.com/daanx/mimalloc-bench
+[submodule "agda-stdlib"]
+	path = agda-stdlib
+	url = https://github.com/agda/agda-stdlib
