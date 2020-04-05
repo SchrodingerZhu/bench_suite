@@ -5,3 +5,4 @@ __pycache__
 benchmark
 dump.rdb
 benchmark-random*
+*.rdb

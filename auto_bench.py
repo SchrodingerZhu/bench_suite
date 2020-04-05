@@ -35,7 +35,7 @@ def auto_run_bencher(bencher, time=5, ave=True):
 def auto_run_builder(builder, time=5, ave=True):
     res = dict()
     for b in bencher.bencher_list.values():
-        print("running", b.__name__, "with", b.name)
+        print("running", b.__name__, "with", builder.name)
         single = auto_run_single(b, builder, time, ave)
         res[b.__name__] = single
     return res

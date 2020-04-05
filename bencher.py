@@ -199,12 +199,14 @@ class Redis(PreloadBencher):
 
     def run(self):
         with tempfile.NamedTemporaryFile() as time_record:
-            with subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server"],
+            with subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server", "--save", "", "--appendonly", "no"],
                                   env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as server:
                 try:
-                    super().run()
-                    subprocess.run(["redis-cli", "shutdown"])
                     time.sleep(1)
+                    super().run()
+                    time.sleep(1)
+                    subprocess.run(["redis-cli", "shutdown"])
+                    time.sleep(0.5)
                     with open(time_record.name) as file:
                         res = file.readline().split()
                         self.page_fault = int(res[0])

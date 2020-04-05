@@ -55,6 +55,21 @@ class CMAKEBuilder:
         return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[
             0]
 
+class SystemLibc:
+    def __init__(self):
+        self.name = "system"
+
+    def clean(self):
+        pass
+
+    def library(self):
+        pass
+
+    def size(self):
+        return 0
+
+    def version(self):
+        return "system"
 
 class GeneralBuilder:
     def __init__(self, name: str, workdir: str, lib: str, target: Optional[Union[str, List[str]]] = None,
@@ -132,13 +147,14 @@ builder_list = {
                                "bin/" + platform.system().lower() + '/release/'
                                + platform.machine().replace('_', '-') + '/librpmallocwrap.so',
                                generator='ninja', prepare=__rpmalloc_prepare),
-    "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
-                              options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
-    # emmm, this will make some test run into segment fault
+    # "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
+    #                          options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
+    # emmm, this will make some tests run into segment fault even with the required flags; What's more, setting the flag will make other allocator fail
     "mesh": GeneralBuilder("mesh", "mesh", "bazel-bin/src/libmesh.so", target=["build", "lib"]),
     "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare),
     "hardened": GeneralBuilder("hardened_malloc", "hardened_malloc", "libhardened_malloc.so",
-                               target="libhardened_malloc.so")
+                               target="libhardened_malloc.so"),
+    "system": SystemLibc()
 }
 
 
