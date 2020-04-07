@@ -81,8 +81,7 @@ class Agda(PreloadBencher):
 
 
 class RpTest(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd", "op_per_sec")
-
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "op_per_sec")
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -99,8 +98,6 @@ class RpTest(PreloadBencher):
 
 
 class MStress(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
-
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -112,8 +109,6 @@ class MStress(PreloadBencher):
 
 
 class RbStress(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
-
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -129,8 +124,6 @@ class RbStress(PreloadBencher):
 
 
 class AllocTest(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
-
     def __init__(self, lib_path=None, thd=None):
         if thd:
             self.thd = thd
@@ -144,7 +137,7 @@ class AllocTest(PreloadBencher):
 
 
 class Larson(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd", "op_per_sec")
+    attribute_list = ("mem_peak", "page_fault", "op_per_sec")
 
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
@@ -161,7 +154,7 @@ class Larson(PreloadBencher):
 
 
 class XmallocTest(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd", "op_per_sec", "rtime")
+    attribute_list = ("mem_peak", "page_fault", "op_per_sec", "rtime")
 
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
@@ -195,12 +188,15 @@ class Redis(PreloadBencher):
     def __init__(self, lib_path=None):
         self.op_per_sec = None
         super().__init__("redis-benchmark",
-                         args=["-r", "1000000", "-n", "1000000", "-P", "8", "-q", "lpush", "a", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "lrange", "a", "1", "10"], lib_path=lib_path)
+                         args=["-r", "1000000", "-n", "1000000", "-P", "8", "-q", "lpush", "a", "1", "2", "3", "4", "5",
+                               "6", "7", "8", "9", "10", "lrange", "a", "1", "10"], lib_path=lib_path)
 
     def run(self):
         with tempfile.NamedTemporaryFile() as time_record:
-            with subprocess.Popen(["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server", "--save", "", "--appendonly", "no"],
-                                  env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as server:
+            with subprocess.Popen(
+                    ["env", "time", "-f", "%R %e %M", "-o", time_record.name, "redis-server", "--save", "",
+                     "--appendonly", "no"],
+                    env=self.env, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as server:
                 try:
                     time.sleep(1)
                     super().run()
@@ -221,7 +217,6 @@ class Redis(PreloadBencher):
                     raise e
 
 
-
 class Espresso(PreloadBencher):
     def __init__(self, lib_path=None):
         super().__init__("benchmark/espresso", args=["mimalloc-bench/bench/espresso/largest.espresso"],
@@ -229,7 +224,7 @@ class Espresso(PreloadBencher):
 
 
 class Sh6Bench(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault")
 
     def __init__(self, lib_path=None, thd=None):
         if thd:
@@ -240,7 +235,7 @@ class Sh6Bench(PreloadBencher):
 
 
 class Sh8Bench(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault")
 
     def __init__(self, lib_path=None, thd=None):
         if thd:
@@ -251,7 +246,7 @@ class Sh8Bench(PreloadBencher):
 
 
 class CacheThrash(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault")
 
     def __init__(self, lib_path=None, thd=None):
         if thd:
@@ -263,7 +258,7 @@ class CacheThrash(PreloadBencher):
 
 
 class CacheScratch(PreloadBencher):
-    attribute_list = ("mem_peak", "time_elapsed", "page_fault", "thd")
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault")
 
     def __init__(self, lib_path=None, thd=None):
         if thd:
@@ -275,7 +270,7 @@ class CacheScratch(PreloadBencher):
 
 
 class Ebizzy(PreloadBencher):
-    attribute_list = ("mem_peak", "page_fault", "thd", "op_per_sec")
+    attribute_list = ("mem_peak", "page_fault", "op_per_sec")
 
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
@@ -302,7 +297,7 @@ bencher_list = {
     "mstress": MStress,
     "rbstress": RbStress,
     "alloc_test": AllocTest,
-    "alloc_larson": Larson,
+    "larson": Larson,
     "xmalloc_test": XmallocTest,
     "barnes": Barnes,
     "redis": Redis,
@@ -310,6 +305,6 @@ bencher_list = {
     "sh6bench": Sh6Bench,
     "sh8bench": Sh8Bench,
     "cache_scratch": CacheScratch,
-    "cache_trash": CacheThrash,
+    "cache_thrash": CacheThrash,
     "ebizzy": Ebizzy
 }

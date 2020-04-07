@@ -52,8 +52,9 @@ class CMAKEBuilder:
         return os.path.getsize(self.library())
 
     def version(self):
-        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.decode().split()[
             0]
+
 
 class SystemLibc:
     def __init__(self):
@@ -63,13 +64,14 @@ class SystemLibc:
         pass
 
     def library(self):
-        pass
+        return "/lib64/libc.so.6"
 
     def size(self):
-        return 0
+        return os.path.getsize(self.library())
 
     def version(self):
-        return "system"
+        return subprocess.run(["/lib64/libc.so.6", "--version"], capture_output=True).stdout.decode().split('\n')[0]
+
 
 class GeneralBuilder:
     def __init__(self, name: str, workdir: str, lib: str, target: Optional[Union[str, List[str]]] = None,
@@ -98,7 +100,7 @@ class GeneralBuilder:
         subprocess.run(["git", "clean", "-fdx"], cwd=self.workdir)
 
     def version(self):
-        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.split()[
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.decode().split()[
             0]
 
     def build(self) -> str:
@@ -106,6 +108,9 @@ class GeneralBuilder:
             self.prepare()
         subprocess.run([*self.build_cmd, "-j", str(self.parallel), *self.options], cwd=self.workdir)
         return os.path.abspath(self.workdir + "/" + self.lib)
+
+    def size(self):
+        return os.path.getsize(self.library())
 
     def library(self) -> str:
         return os.path.abspath(self.workdir + "/" + self.lib)
@@ -159,4 +164,4 @@ builder_list = {
 
 
 def build_all() -> List[Tuple[str, str, str]]:
-    return [(i.name, i.version().decode(), i.build()) for i in builder_list.values()]
+    return [(i.name, i.version(), i.build()) for i in builder_list.values()]

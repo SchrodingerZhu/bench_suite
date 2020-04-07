@@ -39,12 +39,16 @@ class MallocBench:
         res = auto_bench.auto_run_single(bencher.bencher_list[bencher_name], builder.builder_list[allocator_name], time, ave)
         print(json.dumps(res))
 
-    def run_bencher(self, name: str, time: int=1, ave=True):
-        res = auto_bench.auto_run_bencher(bencher.bencher_list[name], time, ave)
+    def run_bencher(self, name: str, time: int=1, ave=True, vis=True):
+        res = auto_bench.auto_run_bencher(bencher.bencher_list[name], time, ave, vis)
         print(json.dumps(res))
 
     def run_allocator(self, name: str, time: int = 1, ave=True):
         res = auto_bench.auto_run_builder(builder.builder_list[name], time, ave)
+        print(json.dumps(res))
+
+    def run_all(self,time: int=1, ave=True, vis=True):
+        res = auto_bench.run_all(time, ave, vis)
         print(json.dumps(res))
 
 

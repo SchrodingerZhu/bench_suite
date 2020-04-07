@@ -1,7 +1,7 @@
 import builder
 import collections
 import bencher
-
+import visual
 
 def auto_run_single(bencher, builder, time=5, ave=True):
     runner = bencher(builder.library())
@@ -23,12 +23,14 @@ def auto_run_single(bencher, builder, time=5, ave=True):
         return None
 
 
-def auto_run_bencher(bencher, time=5, ave=True):
+def auto_run_bencher(bencher, time=5, ave=True, vis=True):
     res = dict()
     for b in builder.builder_list.values():
         print("running", bencher.__name__, "with", b.name)
-        single = auto_run_single(bencher, b, time, ave)
+        single = auto_run_single(bencher, b, time, ave or vis)
         res[b.name] = single
+    if vis:
+        visual.plot(bencher, res)
     return res
 
 
@@ -41,10 +43,10 @@ def auto_run_builder(builder, time=5, ave=True):
     return res
 
 
-def run_all(time=5, ave=True):
+def run_all(time=5, ave=True, vis=True):
     res = dict()
     for b in bencher.bencher_list.values():
-        single = auto_run_bencher(b, time, ave)
+        single = auto_run_bencher(b, time, ave, vis)
         res[b.__name__] = single
     return res
 

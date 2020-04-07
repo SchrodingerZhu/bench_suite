@@ -3,6 +3,6 @@ venv
 __pycache__
 .idea
 benchmark
-dump.rdb
 benchmark-random*
 *.rdb
+output
