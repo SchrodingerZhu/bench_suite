@@ -20,7 +20,7 @@ class MallocBench:
     def clean_allocator(self, name: str):
         builder.builder_list[name].clean()
 
-    def clean_allocators(self, name: str):
+    def clean_allocators(self):
         for i in builder.builder_list.values():
             i.clean()
 
