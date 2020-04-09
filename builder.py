@@ -65,7 +65,10 @@ class SystemLibc:
 
     def library(self):
         return "/lib64/libc.so.6"
-
+    
+    def build(self):
+        pass
+    
     def size(self):
         return os.path.getsize(self.library())
 
