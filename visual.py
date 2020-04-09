@@ -40,3 +40,4 @@ def plot(bencher, data):
         autolabel(rects, ax)
         fig.tight_layout()
         plt.savefig("output/{}-{}.png".format(bencher.__name__, i))
+        plt.close(fig)

@@ -47,9 +47,13 @@ class MallocBench:
         res = auto_bench.auto_run_builder(builder.builder_list[name], time, ave)
         print(json.dumps(res))
 
-    def run_all(self,time: int=1, ave=True, vis=True):
+    def run_all(self,time: int=1, ave=True, vis=True, save=True):
         res = auto_bench.run_all(time, ave, vis)
-        print(json.dumps(res))
+        j_data = json.dumps(res)
+        print(j_data)
+        if save:
+           with open("output/data.json", "w+") as file:
+                file.write(str(j_data))
 
 
 if __name__ == '__main__':
