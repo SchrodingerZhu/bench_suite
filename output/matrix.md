@@ -6,8 +6,8 @@ Title: Infomation Matrix
   - Number: `12`
   - Model: `Intel(R) Xeon(R) E-2176M  CPU @ 2.70GHz`
 - OS
-  - Kernel: `5.6.2-zen1-2-zen`
-  - Version: `#1 ZEN SMP PREEMPT Sun, 05 Apr 2020 05:14:52 +0000`
+  - Kernel: `5.6.3-zen1-1-zen`
+  - Version: `#1 ZEN SMP PREEMPT Wed, 08 Apr 2020 07:47:48 +0000`
 - Redis
   - Version: `Redis server v=5.0.8 sha=00000000:0 malloc=jemalloc-5.2.1 bits=64 build=b2bf869b5247fdeb`
   - Args: `["--save", "", "--appendonly", "no"]`
@@ -20,12 +20,12 @@ Title: Infomation Matrix
 - Allocators:
 
   - snmalloc
-    - Version: `d878880`
-    - Size: `1406688`
+    - Version: `74657d9`
+    - Size: `1785352`
 
   - snmalloc-1mib
-    - Version: `d878880`
-    - Size: `1208920`
+    - Version: `74657d9`
+    - Size: `1587568`
 
   - mimalloc
     - Version: `6e1ca96`
@@ -48,8 +48,8 @@ Title: Infomation Matrix
     - Size: `409064`
 
   - jemalloc
-    - Version: `0d6d9e85`
-    - Size: `8274968`
+    - Version: `ea6b3e97`
+    - Size: `6634344`
 
   - rpmalloc
     - Version: `75e19cc`
@@ -64,7 +64,7 @@ Title: Infomation Matrix
     - Size: `458704`
 
   - hardened_malloc
-    - Version: `466d351`
+    - Version: `2a87f52`
     - Size: `46016`
 
   - system
