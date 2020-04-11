@@ -5,3 +5,5 @@ __pycache__
 benchmark
 benchmark-random*
 *.rdb
+.idea
+target
