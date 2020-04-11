@@ -21,4 +21,10 @@ Title: contents
 - [CacheScratch](CacheScratch.md)
 - [CacheThrash](CacheThrash.md)
 - [Ebizzy](Ebizzy.md)
+- [(**RUST**)Xactor](Xactor.md)
+- [(**RUST**)BTree](BTree.md)
+- [(**RUST**)Skiplist](Skiplist.md)
+- [(**RUST**)Rayon](Rayon.md)
+- [(**RUST**)HashBrown](HashBrown.md)
+- [(**RUST**)SIMDJson](SIMDJson.md)
 

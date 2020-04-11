@@ -4,7 +4,13 @@ import bencher
 import visual
 
 def auto_run_single(bencher, builder, time=5, ave=True):
-    runner = bencher(builder.library())
+    if bencher.rust:
+        if not builder.crate_version:
+            return None
+        else:
+            runner = bencher(builder.name)
+    else:
+        runner = bencher(builder.library())
     result = collections.defaultdict(list)
     try:
         for i in range(time):
@@ -26,6 +32,8 @@ def auto_run_single(bencher, builder, time=5, ave=True):
 def auto_run_bencher(bencher, time=5, ave=True, vis=True):
     res = dict()
     for b in builder.builder_list.values():
+        if bencher.rust and not b.crate_version:
+            continue
         print("running", bencher.__name__, "with", b.name)
         single = auto_run_single(bencher, b, time, ave or vis)
         res[b.name] = single

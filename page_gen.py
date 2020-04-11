@@ -93,7 +93,11 @@ Title: contents
 def gen_index():
     res = []
     for i in bencher.bencher_list.values():
-        res.append(CONTENT_ITEM.format(i.__name__, i.__name__))
+        if i.rust:
+            name = "(**RUST**)" + i.__name__
+        else:
+            name = i.__name__
+        res.append(CONTENT_ITEM.format(name, i.__name__))
     return CONTENTS.format("".join(res))
 
 

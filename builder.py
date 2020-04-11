@@ -7,6 +7,24 @@ import platform
 from typing import *
 
 
+class RustOnly:
+    def __init__(self, name, crate_version):
+        self.crate_version = crate_version
+        self.name = name
+
+    def version(self):
+        return "rust" + self.crate_version
+
+    def clean(self):
+        pass
+
+    def build(self):
+        pass
+
+    def size(self):
+        return "rust crate"
+
+
 class CMAKEBuilder:
     """
     A base class for cmake project
@@ -14,7 +32,8 @@ class CMAKEBuilder:
 
     def __init__(self, name: str, workdir: str, target: str, lib: str,
                  options: Iterable = ("-DCMAKE_BUILD_TYPE=Release",),
-                 parallel: Optional[int] = None, generator: Optional[str] = None):
+                 parallel: Optional[int] = None, generator: Optional[str] = None, crate_version=None):
+        self.crate_version = crate_version
         if not parallel:
             self.parallel = multiprocessing.cpu_count()
         else:
@@ -52,12 +71,14 @@ class CMAKEBuilder:
         return os.path.getsize(self.library())
 
     def version(self):
-        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.decode().split()[
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir,
+                              capture_output=True).stdout.decode().split()[
             0]
 
 
 class SystemLibc:
     def __init__(self):
+        self.crate_version = "system"
         self.name = "system"
 
     def clean(self):
@@ -65,10 +86,10 @@ class SystemLibc:
 
     def library(self):
         return "/lib64/libc.so.6"
-    
+
     def build(self):
         pass
-    
+
     def size(self):
         return os.path.getsize(self.library())
 
@@ -78,7 +99,9 @@ class SystemLibc:
 
 class GeneralBuilder:
     def __init__(self, name: str, workdir: str, lib: str, target: Optional[Union[str, List[str]]] = None,
-                 options: Iterable = (), parallel: Optional[int] = None, prepare=None, generator="make"):
+                 options: Iterable = (), parallel: Optional[int] = None, prepare=None, generator="make",
+                 crate_version=None):
+        self.crate_version = crate_version
         if not parallel:
             self.parallel = multiprocessing.cpu_count()
         else:
@@ -103,7 +126,8 @@ class GeneralBuilder:
         subprocess.run(["git", "clean", "-fdx"], cwd=self.workdir)
 
     def version(self):
-        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir, capture_output=True).stdout.decode().split()[
+        return subprocess.run(["git", "log", "-1", "--oneline"], cwd=self.workdir,
+                              capture_output=True).stdout.decode().split()[
             0]
 
     def build(self) -> str:
@@ -141,20 +165,22 @@ def __super_prepare(self):
 
 
 builder_list = {
-    "snmalloc": CMAKEBuilder("snmalloc", "snmalloc", "snmallocshim", "libsnmallocshim.so"),
-    "snmalloc-1mib": CMAKEBuilder("snmalloc-1mib", "snmalloc", "snmallocshim-1mib", "libsnmallocshim-1mib.so"),
-    "mimalloc": CMAKEBuilder("mimalloc", "mimalloc", "mimalloc", "libmimalloc.so"),
+    "snmalloc": CMAKEBuilder("snmalloc", "snmalloc", "snmallocshim", "libsnmallocshim.so", crate_version="0.2.9"),
+    "snmalloc-1mib": CMAKEBuilder("snmalloc-1mib", "snmalloc", "snmallocshim-1mib", "libsnmallocshim-1mib.so",
+                                  crate_version="0.2.9"),
+    "mimalloc": CMAKEBuilder("mimalloc", "mimalloc", "mimalloc", "libmimalloc.so", crate_version="0.1.18"),
     "mimalloc-secure": CMAKEBuilder("mimalloc-secure", "mimalloc", "mimalloc", "libmimalloc-secure.so",
-                                    options=("-DCMAKE_BUILD_TYPE=Release", "-DMI_SECURE=4")),
-    "tcmalloc": GeneralBuilder("tcmalloc", "gperftools", ".libs/libtcmalloc_minimal.so", prepare=__tcmalloc_prepare),
+                                    options=("-DCMAKE_BUILD_TYPE=Release", "-DMI_SECURE=4"), crate_version="0.1.18"),
+    "tcmalloc": GeneralBuilder("tcmalloc", "gperftools", ".libs/libtcmalloc_minimal.so", prepare=__tcmalloc_prepare,
+                               crate_version="0.3.0"),
     "tbb": GeneralBuilder("intel-tbb", "tbb", "build/bench_release/libtbbmalloc.so.2", "tbbmalloc",
                           options=["-e", "tbb_build_prefix=bench"]),
     "hoard": GeneralBuilder("hoard", "Hoard/src", "libhoard.so"),
-    "jemalloc": GeneralBuilder("jemalloc", "jemalloc", "lib/libjemalloc.so", prepare=__jemalloc_prepare),
+    "jemalloc": GeneralBuilder("jemalloc", "jemalloc", "lib/libjemalloc.so", prepare=__jemalloc_prepare, crate_version="0.3.2"),
     "rpmalloc": GeneralBuilder("rpmalloc", "rpmalloc",
                                "bin/" + platform.system().lower() + '/release/'
                                + platform.machine().replace('_', '-') + '/librpmallocwrap.so',
-                               generator='ninja', prepare=__rpmalloc_prepare),
+                               generator='ninja', prepare=__rpmalloc_prepare, crate_version="0.1.3"),
     # "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
     #                          options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
     # emmm, this will make some tests run into segment fault even with the required flags; What's more, setting the flag will make other allocator fail
@@ -162,7 +188,9 @@ builder_list = {
     "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare),
     "hardened": GeneralBuilder("hardened_malloc", "hardened_malloc", "libhardened_malloc.so",
                                target="libhardened_malloc.so"),
-    "system": SystemLibc()
+    "system": SystemLibc(),
+    "weealloc": RustOnly("weealloc", "0.4.5"),
+    "dlmalloc": RustOnly("dlmalloc", "0.1.3")
 }
 
 

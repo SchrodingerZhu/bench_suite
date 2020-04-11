@@ -71,3 +71,11 @@ Title: Infomation Matrix
     - Version: `GNU C Library (GNU libc) stable release version 2.31.`
     - Size: `2145592`
 
+  - weealloc
+    - Version: `rust0.4.5`
+    - Size: `rust crate`
+
+  - dlmalloc
+    - Version: `rust0.1.3`
+    - Size: `rust crate`
+

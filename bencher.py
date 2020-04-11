@@ -19,8 +19,71 @@ BARNES_TEMPLATE = """
 """
 
 
+class RustBencher:
+    attribute_list = ("mem_peak", "time_elapsed", "page_fault")
+    rust = True
+
+    def __init__(self, module: str, lib: str, args=()):
+        self.lib = lib
+        self.args = args
+        self.module = module
+        self.mem_peak = None
+        self.page_fault = None
+        self.time_elapsed = None
+
+    def __getitem__(self, item):
+        return self.__dict__[item]
+
+    def run(self):
+        with tempfile.NamedTemporaryFile() as record:
+            child = subprocess.run(["env", "time", "-f", "%R %M", "-o", record.name, "cargo", "run", "--release",
+                                    "--features=bench_{}".format(self.lib),
+                                    "--", self.module, *self.args],
+                                   cwd="rust_bencher", capture_output=True)
+            time.sleep(0.5)  # sometimes closing file proves to be slow
+            self.time_elapsed = int(child.stdout.split()[-2].strip())
+            self.returncode = child.returncode
+            self.stdout = child.stdout
+            self.stderr = child.stderr
+            with open(record.name) as file:
+                res = file.readline().split()
+                self.mem_peak = int(res[1].strip())
+                self.page_fault = int(res[0].strip())
+
+
+class Xactor(RustBencher):
+    def __init__(self, lib: str):
+        super().__init__("xactor", lib)
+
+
+class Rayon(RustBencher):
+    def __init__(self, lib: str):
+        super().__init__("rayon", lib)
+
+
+class BTree(RustBencher):
+    def __init__(self, lib: str):
+        super().__init__("b-tree", lib)
+
+
+class SIMDJson(RustBencher):
+    def __init__(self, lib: str):
+        super().__init__("simdjson", lib)
+
+
+class HashBrown(RustBencher):
+    def __init__(self, lib: str):
+        super().__init__("hashbrown", lib)
+
+
+class Skiplist(RustBencher):
+    def __init__(self, lib: str):
+        super().__init__("skiplist", lib)
+
+
 class PreloadBencher:
     attribute_list = ("mem_peak", "time_elapsed", "page_fault")
+    rust = False
 
     def __init__(self, exec, args=(), extra_env: Mapping[str, str] = None, stdin=None, lib_path=None,
                  cwd=None):
@@ -50,6 +113,7 @@ class PreloadBencher:
             child = subprocess.run(["env", "time", "-f", "%R %e %M", "-o", time_record.name, self.exec, *self.args],
                                    cwd=self.cwd, env=self.env, stderr=subprocess.PIPE, stdin=self.stdin,
                                    stdout=subprocess.PIPE)
+            time.sleep(0.5)  # sometimes closing file proves to be slow
             with open(time_record.name) as file:
                 res = file.readline().split()
                 self.stdout = child.stdout.decode()
@@ -82,6 +146,7 @@ class Agda(PreloadBencher):
 
 class RpTest(PreloadBencher):
     attribute_list = ("mem_peak", "time_elapsed", "page_fault", "op_per_sec")
+
     def __init__(self, lib_path=None, thd=None):
         self.op_per_sec = None
         if thd:
@@ -306,5 +371,11 @@ bencher_list = {
     "sh8bench": Sh8Bench,
     "cache_scratch": CacheScratch,
     "cache_thrash": CacheThrash,
-    "ebizzy": Ebizzy
+    "ebizzy": Ebizzy,
+    "xactor": Xactor,
+    "btree": BTree,
+    "skiplist": Skiplist,
+    "rayon": Rayon,
+    "hashbrown": HashBrown,
+    "simdjson": SIMDJson
 }
