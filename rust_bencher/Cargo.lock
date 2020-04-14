@@ -580,9 +580,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.68"
+version = "0.2.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dea0c0405123bba743ee3f91f49b1c7cfb684eef0da0a50110f758ccf24cdff0"
+checksum = "99e85c08494b21a9054e7fe1374a732aeadaff3980b6990b94bfd3a70f690005"
 
 [[package]]
 name = "libmimalloc-sys"
@@ -993,18 +993,18 @@ checksum = "c111b5bd5695e56cffe5129854aa230b39c93a305372fdbb2668ca2394eea9f8"
 
 [[package]]
 name = "snmalloc-rs"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73ec748a46508c2c6f72110911f3a064fbbd0aa3a46b589364565a89a77251d3"
+checksum = "7f80f4218e4dbf59e47c813f752bad1885d96d1927825b69ec5fe48734f5bce5"
 dependencies = [
  "snmalloc-sys",
 ]
 
 [[package]]
 name = "snmalloc-sys"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6bffcbab95e17b4ef383c67fe6d151f544c749252936ed2c7d65a56f207ed836"
+checksum = "ad017500db7b027deb5423d82c1ab293f59f59914ca32ec978be396a1358d02f"
 dependencies = [
  "cmake",
  "libc",

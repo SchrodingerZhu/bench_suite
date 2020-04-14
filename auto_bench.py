@@ -32,8 +32,10 @@ def auto_run_single(bencher, builder, time=5, ave=True):
 def auto_run_bencher(bencher, time=5, ave=True, vis=True):
     res = dict()
     for b in builder.builder_list.values():
-        if bencher.rust and not b.crate_version:
+        if bencher.rust and b.crate_version is None:
             continue
+        if isinstance(b, builder.RustOnly) and not bencher.rust:
+            continue 
         print("running", bencher.__name__, "with", b.name)
         single = auto_run_single(bencher, b, time, ave or vis)
         res[b.name] = single

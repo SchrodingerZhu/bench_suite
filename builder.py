@@ -165,9 +165,10 @@ def __super_prepare(self):
 
 
 builder_list = {
-    "snmalloc": CMAKEBuilder("snmalloc", "snmalloc", "snmallocshim", "libsnmallocshim.so", crate_version="0.2.9"),
+    "weealloc": RustOnly("weealloc", "0.4.5"),
+    "snmalloc": CMAKEBuilder("snmalloc", "snmalloc", "snmallocshim", "libsnmallocshim.so", crate_version="0.2.10"),
     "snmalloc-1mib": CMAKEBuilder("snmalloc-1mib", "snmalloc", "snmallocshim-1mib", "libsnmallocshim-1mib.so",
-                                  crate_version="0.2.9"),
+                                  crate_version="0.2.10"),
     "mimalloc": CMAKEBuilder("mimalloc", "mimalloc", "mimalloc", "libmimalloc.so", crate_version="0.1.18"),
     "mimalloc-secure": CMAKEBuilder("mimalloc-secure", "mimalloc", "mimalloc", "libmimalloc-secure.so",
                                     options=("-DCMAKE_BUILD_TYPE=Release", "-DMI_SECURE=4"), crate_version="0.1.18"),
@@ -181,15 +182,14 @@ builder_list = {
                                "bin/" + platform.system().lower() + '/release/'
                                + platform.machine().replace('_', '-') + '/librpmallocwrap.so',
                                generator='ninja', prepare=__rpmalloc_prepare, crate_version="0.1.3"),
-    # "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
-    #                          options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
+    "scalloc": GeneralBuilder("scalloc", "scalloc", "out/Release/lib.target/libscalloc.so", prepare=__scalloc_prepare,
+                              options=["-e", "BUILDTYPE=Release", "CC=clang", "CXX=clang++"]),
     # emmm, this will make some tests run into segment fault even with the required flags; What's more, setting the flag will make other allocator fail
     "mesh": GeneralBuilder("mesh", "mesh", "bazel-bin/src/libmesh.so", target=["build", "lib"]),
     "super": GeneralBuilder("super_malloc", "SuperMalloc/release", "lib/libsupermalloc.so", prepare=__super_prepare),
     "hardened": GeneralBuilder("hardened_malloc", "hardened_malloc", "libhardened_malloc.so",
                                target="libhardened_malloc.so"),
     "system": SystemLibc(),
-    "weealloc": RustOnly("weealloc", "0.4.5"),
     "dlmalloc": RustOnly("dlmalloc", "0.1.3")
 }
 
