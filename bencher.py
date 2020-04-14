@@ -30,6 +30,9 @@ class RustBencher:
         self.mem_peak = None
         self.page_fault = None
         self.time_elapsed = None
+        self.stdout = None
+        self.stderr = None
+        self.returncode = None
 
     def __getitem__(self, item):
         return self.__dict__[item]
