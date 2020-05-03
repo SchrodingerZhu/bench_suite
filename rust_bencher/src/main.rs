@@ -1,5 +1,8 @@
 #![feature(core_intrinsics)]
+#![recursion_limit = "1024"]
 #![feature(type_ascription)]
+mod tremor;
+
 use std::collections::BTreeSet;
 use xactor::*;
 use exec_time::*;
@@ -162,7 +165,8 @@ enum Opt {
     Xactor {
         #[structopt(short = "t", long, help = "iteration time", default_value = "500000")]
         iteration: usize
-    }
+    },
+    Tremor
 }
 
 
@@ -227,6 +231,13 @@ async fn main() -> Result<()> {
             let result = test_actor(iteration).await.unwrap();
             println!("{}", result);
         }
+        Opt::Tremor => {
+            std::env::set_var("TREMOR_PATH", std::fs::canonicalize(
+                "../tremor-runtime/tremor-script/lib").unwrap());
+            tremor::run_dun().await.unwrap();
+        }
     };
     Ok(())
 }
+
+//--no-api -c $file bench/link.yaml --query ./bench/$1/*.trickle

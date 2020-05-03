@@ -24,8 +24,17 @@ tcmalloc = "*"
 snmalloc-rs = "*"
 rpmalloc = "*"
 structopt = "*"
+log = "*"
+serde_yaml = "*"
+tide = "*"
+env_logger = "*"
+log4rs = "*"
+clap = "*"
 dlmalloc = { version = "*", features = ["global"]}
-
+tremor-runtime = { path = "../tremor-runtime", default-features = false}
+tremor-api = { path = "../tremor-runtime/tremor-api", default-features = false}
+tremor-pipeline = { path = "../tremor-runtime/tremor-pipeline", default-features = false}
+tremor-script = { path = "../tremor-runtime/tremor-script", default-features = false}
 
 [features]
 bench_weealloc = []
