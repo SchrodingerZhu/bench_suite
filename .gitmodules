@@ -42,3 +42,6 @@
 [submodule "ltp"]
 	path = ltp
 	url = https://github.com/linux-test-project/ltp
+[submodule "tremor-runtime"]
+	path = tremor-runtime
+	url = git@github.com:wayfair-tremor/tremor-runtime

@@ -25,6 +25,9 @@ snmalloc-rs = "*"
 rpmalloc = "*"
 structopt = "*"
 dlmalloc = { version = "*", features = ["global"]}
+tremor-runtime = { path = "../tremor-runtime", default-features = false}
+tremor-api = { path = "../tremor-runtime/tremor-api", default-features = false}
+tremor-pipeline = { path = "../tremor-runtime/tremor-pipeline", default-features = false}
 
 
 [features]
