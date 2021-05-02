@@ -1,0 +1,42 @@
+[submodule "snmalloc"]
+	path = snmalloc
+	url = https://github.com/microsoft/snmalloc
+[submodule "mimalloc"]
+	path = mimalloc
+	url = https://github.com/microsoft/mimalloc
+[submodule "gperftools"]
+	path = gperftools
+	url = https://github.com/gperftools/gperftools
+[submodule "tbb"]
+	path = tbb
+	url = https://github.com/intel/tbb
+[submodule "Hoard"]
+	path = Hoard
+	url = https://github.com/emeryberger/Hoard
+[submodule "rpmalloc"]
+	path = rpmalloc
+	url = https://github.com/mjansson/rpmalloc
+[submodule "scalloc"]
+	path = scalloc
+	url = https://github.com/cksystemsgroup/scalloc
+[submodule "mesh"]
+	path = mesh
+	url = https://github.com/plasma-umass/mesh
+[submodule "jemalloc"]
+	path = jemalloc
+	url = https://github.com/jemalloc/jemalloc.git
+[submodule "SuperMalloc"]
+	path = SuperMalloc
+	url = https://github.com/kuszmaul/SuperMalloc.git
+[submodule "mimalloc-bench"]
+	path = mimalloc-bench
+	url = https://github.com/daanx/mimalloc-bench
+[submodule "agda-stdlib"]
+	path = agda-stdlib
+	url = https://github.com/agda/agda-stdlib
+[submodule "hardened_malloc"]
+	path = hardened_malloc
+	url = https://github.com/GrapheneOS/hardened_malloc.git
+[submodule "ltp"]
+	path = ltp
+	url = https://github.com/linux-test-project/ltp

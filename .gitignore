@@ -1,0 +1,9 @@
+bench_build_*
+venv
+__pycache__
+.idea
+benchmark
+benchmark-random*
+*.rdb
+.idea
+target

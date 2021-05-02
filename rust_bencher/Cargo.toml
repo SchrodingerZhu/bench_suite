@@ -1,0 +1,43 @@
+[package]
+name = "rust_bencher"
+version = "0.1.0"
+authors = ["SchrodingerZhu <i@zhuyi.fan>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+exec_time = "*"
+simd-json = "*"
+rayon = "*"
+rand = "*"
+xactor = "*"
+async-std = "*"
+async-trait= "*"
+crossbeam = "*"
+crossbeam-skiplist = { git = "https://github.com/crossbeam-rs/crossbeam", features = ["nightly"] }
+hashbrown = "*"
+mimalloc = { version = "*", default-features = false }
+jemallocator = "*"
+wee_alloc = "*"
+tcmalloc = "*"
+snmalloc-rs = "*"
+rpmalloc = "*"
+structopt = "*"
+dlmalloc = { version = "*", features = ["global"]}
+
+
+[features]
+bench_weealloc = []
+bench_jemalloc = []
+bench_mimalloc = []
+bench_tcmalloc = []
+bench_mimalloc-secure = ["mimalloc/secure-full"]
+bench_snmalloc = []
+bench_snmalloc-1mib = ["snmalloc-rs/1mib"]
+bench_rpmalloc = []
+bench_dlmalloc = []
+bench_system = []
+
+
+
